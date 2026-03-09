@@ -3,138 +3,218 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Historical Explorer: The Journey</title>
+    <title>Historical Timeline Explorer</title>
     <style>
-        /* Step 1: Smooth Scrolling & Snapping */
-        html {
-            scroll-behavior: smooth;
+        :root {
+            --accent: #d4a373;
+            --bg: #f8f9fa;
         }
 
         body {
+            font-family: 'Segoe UI', Roboto, sans-serif;
             margin: 0;
-            font-family: 'Georgia', serif;
-            /* Scroll Snap Container */
-            scroll-snap-type: y mandatory;
-            overflow-y: scroll;
-            height: 100vh;
+            background-color: var(--bg);
+            transition: background 0.5s ease;
         }
 
-        /* Step 2: Full-Screen Sections */
-        section {
-            height: 100vh;
-            display: flex;
-            flex-direction: column;
-            justify-content: center;
-            align-items: center;
+        /* 1. Header */
+        header {
             text-align: center;
-            padding: 0 10%;
-            scroll-snap-align: start; /* Locks the section to the top */
-            position: relative;
-            transition: background-color 0.8s ease;
+            padding: 40px 20px;
+            background: #222;
             color: white;
         }
 
-        /* Step 3: Individual Civilization Themes */
-        .arab-era { background-color: #d4a373; } /* Desert Gold */
-        .ottoman-era { background-color: #606c38; } /* Imperial Green */
-        .american-era { background-color: #2b2d42; } /* Industrial Navy */
-
-        h1 {
-            font-size: 4rem;
-            margin-bottom: 10px;
-            text-transform: uppercase;
-            letter-spacing: 5px;
+        /* 2. Timeline Navigation */
+        .timeline-container {
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            padding: 50px 0;
+            background: white;
+            box-shadow: 0 4px 10px rgba(0,0,0,0.05);
         }
 
-        .overview {
-            font-size: 1.5rem;
-            max-width: 800px;
-            line-height: 1.6;
-            margin-bottom: 30px;
+        .timeline {
+            display: flex;
+            align-items: center;
+            position: relative;
+            width: 80%;
+            max-width: 900px;
         }
 
-        /* Information Panels */
-        .info-grid {
-            display: grid;
-            grid-template-columns: 1fr 1fr;
-            gap: 20px;
-            background: rgba(255, 255, 255, 0.1);
-            padding: 30px;
-            border-radius: 15px;
-            backdrop-filter: blur(5px);
-        }
-
-        .chart-box {
-            border: 2px solid rgba(255,255,255,0.3);
-            padding: 15px;
-        }
-
-        /* Scroll Indicator */
-        .scroll-hint {
+        .timeline-line {
             position: absolute;
-            bottom: 20px;
-            font-size: 0.9rem;
-            animation: bounce 2s infinite;
+            height: 4px;
+            background: #ddd;
+            width: 100%;
+            z-index: 1;
         }
 
-        @keyframes bounce {
-            0%, 20%, 50%, 80%, 100% {transform: translateY(0);}
-            40% {transform: translateY(-10px);}
-            60% {transform: translateY(-5px);}
+        .node {
+            width: 25px;
+            height: 25px;
+            background: #fff;
+            border: 4px solid #ddd;
+            border-radius: 50%;
+            z-index: 2;
+            cursor: pointer;
+            transition: all 0.3s ease;
+            position: relative;
+        }
+
+        .node.active {
+            border-color: var(--accent);
+            transform: scale(1.3);
+            background: var(--accent);
+        }
+
+        .node-label {
+            position: absolute;
+            top: 35px;
+            left: 50%;
+            transform: translateX(-50%);
+            white-space: nowrap;
+            font-weight: bold;
+            font-size: 0.9rem;
+            color: #666;
+        }
+
+        .node.active .node-label { color: #222; }
+
+        /* 3. Information Panel */
+        .content-panel {
+            max-width: 900px;
+            margin: 40px auto;
+            background: white;
+            padding: 50px;
+            border-radius: 20px;
+            box-shadow: 0 10px 30px rgba(0,0,0,0.1);
+            display: grid;
+            grid-template-columns: 1.5fr 1fr;
+            gap: 40px;
+        }
+
+        .chart-bar {
+            height: 12px;
+            background: #eee;
+            border-radius: 10px;
+            margin: 10px 0 20px;
+            overflow: hidden;
+        }
+
+        .progress {
+            height: 100%;
+            background: var(--accent);
+            width: 0%;
+            transition: width 1s ease-in-out;
+        }
+
+        .figures-tags span {
+            display: inline-block;
+            background: #eee;
+            padding: 5px 15px;
+            border-radius: 20px;
+            margin: 5px;
+            font-size: 0.85rem;
         }
     </style>
 </head>
 <body>
 
-    <section class="arab-era">
-        <h1>Arab Civilization</h1>
-        <p class="overview">The Golden Age of science, mathematics, and philosophy. A bridge between ancient knowledge and the modern world.</p>
-        
-        <div class="info-grid">
-            <div class="figures">
-                <h3>Famous Figures</h3>
-                <p>Al-Khwarizmi • Ibn Sina • Al-Razi</p>
+    <header>
+        <h1>Historical Explorer</h1>
+        <p>Click the timeline nodes to travel through history</p>
+    </header>
+
+    <div class="timeline-container">
+        <div class="timeline">
+            <div class="timeline-line"></div>
+            <div class="node active" onclick="updatePage(0)" style="margin-right: auto;">
+                <div class="node-label">Arab Civilization</div>
             </div>
-            <div class="chart-box">
-                <h3>Scientific Influence</h3>
-                <div style="background: gold; width: 95%; height: 10px;"></div>
+            <div class="node" onclick="updatePage(1)" style="margin: 0 auto;">
+                <div class="node-label">Ottoman Empire</div>
+            </div>
+            <div class="node" onclick="updatePage(2)" style="margin-left: auto;">
+                <div class="node-label">American Era</div>
             </div>
         </div>
-        <div class="scroll-hint">Scroll down to travel in time ↓</div>
-    </section>
+    </div>
 
-    <section class="ottoman-era">
-        <h1>Ottoman Empire</h1>
-        <p class="overview">A powerful world empire spanning three continents, blending Eastern and Western cultures for centuries.</p>
-        
-        <div class="info-grid">
-            <div class="figures">
-                <h3>Famous Figures</h3>
-                <p>Mehmed II • Suleiman the Magnificent</p>
-            </div>
-            <div class="chart-box">
-                <h3>Territorial Size</h3>
-                <div style="background: #fefae0; width: 85%; height: 10px;"></div>
+    <main class="content-panel" id="content">
+        <div class="text-side">
+            <h2 id="title">Arab Civilization</h2>
+            <p id="desc">A period of cultural, economic, and scientific flourishing in the history of Islam, traditionally dated from the 8th century to the 14th century.</p>
+            <h3>Key Figures</h3>
+            <div class="figures-tags" id="figures">
+                <span>Al-Khwarizmi</span><span>Ibn Sina</span><span>Ibn Rushd</span>
             </div>
         </div>
-        <div class="scroll-hint">Continue the journey ↓</div>
-    </section>
-
-    <section class="american-era">
-        <h1>American Era</h1>
-        <p class="overview">The rise of the industrial age and the technological revolution, shaping the modern global landscape.</p>
         
-        <div class="info-grid">
-            <div class="figures">
-                <h3>Famous Figures</h3>
-                <p>George Washington • Abraham Lincoln • Thomas Edison</p>
-            </div>
-            <div class="chart-box">
-                <h3>Industrial Rise</h3>
-                <div style="background: #8d99ae; width: 90%; height: 10px;"></div>
-            </div>
+        <div class="chart-side">
+            <h3>Influence Metrics</h3>
+            <label>Scientific Achievements</label>
+            <div class="chart-bar"><div class="progress" id="stat-1" style="width: 95%"></div></div>
+            <label>Trade Influence</label>
+            <div class="chart-bar"><div class="progress" id="stat-2" style="width: 85%"></div></div>
+            <label>Territorial Reach</label>
+            <div class="chart-bar"><div class="progress" id="stat-3" style="width: 70%"></div></div>
         </div>
-    </section>
+    </main>
 
+    <script>
+        const data = [
+            {
+                title: "Arab Civilization",
+                desc: "The Golden Age of science, where algebra was born and ancient Greek texts were preserved and expanded upon.",
+                figures: ["Al-Khwarizmi", "Ibn Sina", "Ibn Rushd"],
+                stats: ["95%", "85%", "70%"],
+                color: "#d4a373",
+                bg: "#fefae0"
+            },
+            {
+                title: "Ottoman Empire",
+                desc: "A transcontinental empire that served as the center of interactions between the Eastern and Western worlds for six centuries.",
+                figures: ["Mehmed II", "Suleiman I", "Mimar Sinan"],
+                stats: ["75%", "90%", "95%"],
+                color: "#606c38",
+                bg: "#f2f4ef"
+            },
+            {
+                title: "American Era",
+                desc: "The era defined by the Industrial Revolution, the advent of the digital age, and global technological leadership.",
+                figures: ["Washington", "Lincoln", "Edison"],
+                stats: ["90%", "95%", "80%"],
+                color: "#2b2d42",
+                bg: "#edf2f4"
+            }
+        ];
+
+        function updatePage(index) {
+            const item = data[index];
+            
+            // Update Text
+            document.getElementById('title').innerText = item.title;
+            document.getElementById('desc').innerText = item.desc;
+            document.body.style.backgroundColor = item.bg;
+            document.documentElement.style.setProperty('--accent', item.color);
+
+            // Update Figures
+            const figContainer = document.getElementById('figures');
+            figContainer.innerHTML = item.figures.map(f => `<span>${f}</span>`).join('');
+
+            // Update Stats (with animation reset)
+            document.getElementById('stat-1').style.width = item.stats[0];
+            document.getElementById('stat-2').style.width = item.stats[1];
+            document.getElementById('stat-3').style.width = item.stats[2];
+
+            // Update Active Node
+            const nodes = document.querySelectorAll('.node');
+            nodes.forEach((n, i) => {
+                n.classList.toggle('active', i === index);
+            });
+        }
+    </script>
 </body>
 </html>
